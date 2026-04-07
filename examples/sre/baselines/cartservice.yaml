@@ -1,0 +1,16 @@
+name: cartservice
+captured_at: "2026-04-07T16:50:00Z"
+window: "1h"
+note: "CrashLoopBackOff active — avg_bytes null (no running container). max_bytes from last known good state."
+
+cpu:
+  avg_cores: 0.00555
+  max_cores: 0.00848
+memory:
+  avg_bytes: null    # null when container is not running
+  avg_mb: null
+  max_bytes: 133763072
+  max_mb: 127.6
+restarts:
+  total: 10
+  rate_per_hour: 10.07

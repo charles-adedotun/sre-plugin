@@ -94,7 +94,7 @@ Add a `pod` variable filtered by namespace:
 
 **Find the datasource UID:** If Grafana is accessible, query:
 ```bash
-curl -s -u admin:<password> "${GRAFANA_URL}/api/datasources" | python3 -c "
+curl -s -u "admin:${GRAFANA_PASSWORD}" "${GRAFANA_URL}/api/datasources" | python3 -c "
 import json,sys
 for ds in json.load(sys.stdin):
     if ds['type'] == 'prometheus':
@@ -202,7 +202,7 @@ If Grafana URL and credentials are available:
 ```bash
 curl -s -X POST \
   -H "Content-Type: application/json" \
-  -u "admin:<password>" \
+  -u "admin:${GRAFANA_PASSWORD}" \
   "${GRAFANA_URL}/api/dashboards/db" \
   -d '<dashboard JSON>'
 ```

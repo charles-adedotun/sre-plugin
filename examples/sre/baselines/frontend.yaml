@@ -1,0 +1,15 @@
+name: frontend
+captured_at: "2026-04-07T16:50:00Z"
+window: "1h"
+
+cpu:
+  avg_cores: 0.00782
+  max_cores: 0.01344
+memory:
+  avg_bytes: 22040576
+  avg_mb: 21.0
+  max_bytes: 22331392
+  max_mb: 21.3
+restarts:
+  total: 0
+  rate_per_hour: 0.0

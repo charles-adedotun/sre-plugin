@@ -1,0 +1,43 @@
+name: frontend
+namespace: online-boutique
+deployment: frontend
+pod_pattern: "frontend.*"
+replicas: 1
+container: server
+discovered_at: "2026-04-07T15:50:00Z"
+
+metrics:
+  container:
+    - container_cpu_usage_seconds_total
+    - container_memory_working_set_bytes
+    - container_network_receive_bytes_total
+    - container_network_transmit_bytes_total
+  kube_state:
+    - kube_pod_container_status_restarts_total
+    - kube_pod_status_phase
+    - kube_deployment_status_replicas_available
+  application: []  # no app-level Prometheus scrape for this service
+
+labels:
+  namespace: online-boutique
+  container: server
+  pod_regex: "frontend.*"
+
+jobs:
+  container_metrics: kubelet
+  kube_state_metrics: kube-state-metrics
+  application: null
+
+dependencies:
+  - productcatalogservice
+  - currencyservice
+  - cartservice
+  - recommendationservice
+  - shippingservice
+  - checkoutservice
+  - adservice
+
+loki:
+  available: true
+  app_label: server
+  log_format: structured_json
