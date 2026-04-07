@@ -1,0 +1,21 @@
+{
+  "name": "sre-skills",
+  "version": "1.0.0",
+  "description": "Context-aware SRE skills for Prometheus + Loki + Grafana. Discovers your infrastructure, builds a living service context (.sre/), then generates dashboards, investigates incidents, tunes alerts, and tracks SLOs using your actual metrics and baselines — not templates.",
+  "author": {
+    "name": "Charles Adedotun"
+  },
+  "keywords": [
+    "sre",
+    "grafana",
+    "prometheus",
+    "loki",
+    "observability",
+    "dashboard",
+    "incident",
+    "slo",
+    "alerting",
+    "monitoring",
+    "kubernetes"
+  ]
+}
