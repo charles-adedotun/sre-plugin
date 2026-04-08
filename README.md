@@ -1,4 +1,4 @@
-# claude-sre-skills
+# sre-plugin
 
 Context-aware SRE skills for Claude Code. Works with Prometheus + Loki + Grafana.
 
