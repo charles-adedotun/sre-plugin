@@ -6,13 +6,13 @@ description: >
   "build a monitoring dashboard", "make a Grafana dashboard", "I need to monitor X",
   "create panels for X", "generate dashboard JSON", "build a RED dashboard",
   "build a USE dashboard", "set up observability for X", "push a dashboard to Grafana",
-  "visualize metrics for X", or needs a production-ready Grafana dashboard.
+  "visualize metrics for X", or needs Grafana dashboard JSON.
 version: 1.0.0
 ---
 
 # Context-Aware Grafana Dashboard Generator
 
-Generate production-ready Grafana dashboard JSON using the `.sre/` context directory. Unlike template-based approaches, this skill uses **your actual metrics and baselines** — no hallucinated metric names, no hardcoded thresholds.
+Generate Grafana dashboard JSON using the `.sre/` context directory. Prefer discovered metric names and baselines from the local context; if context is missing or incomplete, ask for clarification instead of inventing metrics or thresholds.
 
 **Prerequisite:** Run the `discover` skill first to populate `.sre/`. If `.sre/` doesn't exist, tell the user to run `/discover` first.
 

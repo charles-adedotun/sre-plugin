@@ -1,84 +1,61 @@
 # sre-plugin
 
-Context-aware SRE skills for Claude Code. Works with Prometheus + Loki + Grafana.
+Claude Code plugin assets for SRE workflows with Prometheus, Loki, Grafana, and Kubernetes context.
 
-> **The key idea:** a `.sre/` directory lives next to your code — a living knowledge base of YOUR infrastructure that every skill reads from and writes to. No hardcoded templates, no hallucinated metric names. The agent discovers your system, learns your baselines, then generates dashboards and investigations using your actual data.
+The plugin defines commands, skills, and one SRE agent that use a local `.sre/` directory as environment context. The context files are generated per target environment and should not contain credentials.
 
-## What makes this different
+## Current Contents
 
-| Template-based repos | This repo |
-|---|---|
-| Hardcoded `p99 < 500ms` | Threshold = 2× your actual measured baseline |
-| Guesses metric names | Uses only metrics discovered in YOUR Prometheus |
-| Single-service view | Topology-aware — traces blast radius across upstream/downstream |
-| Stateless | `.sre/` context that persists across conversations |
+- `.claude-plugin/plugin.json`: plugin metadata for local Claude Code installation.
+- `commands/`: slash-command entrypoints for discovery, dashboard generation, investigation, SLOs, and alert tuning.
+- `skills/`: detailed workflows consumed by those commands.
+- `agents/sre.md`: multi-skill SRE agent prompt.
+- `examples/sre/`: sample `.sre/` context files from an Online Boutique demo environment.
+- `examples/dashboards/`: Python scripts used to generate the committed dashboard screenshots for the Online Boutique demo.
+- `docs/screenshots/`: screenshots from that demo environment.
 
-## Proven on a real cluster
+## Demo Evidence
 
-Tested end-to-end against a live kind cluster running [Google Online Boutique](https://github.com/GoogleCloudPlatform/microservices-demo) (11 microservices) with kube-prometheus-stack + Loki. The dashboards below show real cluster data — including a live `cartservice` CrashLoopBackOff incident the dashboards surfaced automatically.
+The screenshots in `docs/screenshots/` were produced from a kind cluster running Google Online Boutique with kube-prometheus-stack and Loki. They demonstrate the expected dashboard shape and example data model, including a captured `cartservice` CrashLoopBackOff state.
 
-### Cluster Overview — all 11 services at a glance
-![Cluster Overview](docs/screenshots/cluster-overview.png)
+This repository does not include an automated end-to-end test that starts that cluster or verifies live Prometheus, Loki, and Grafana responses. Treat the screenshots and `examples/` files as reproducible demo artifacts, not as a hosted service claim.
 
-*13 pods running · 9 restarts (red) · cartservice at 0 replicas (red — real incident) · 485 log errors*
+## Commands
 
-### Logs Explorer — interactive log analysis with 4 template variables
-![Logs Explorer](docs/screenshots/logs-explorer.png)
+| Command | Purpose |
+| --- | --- |
+| `/discover` | Build `.sre/` context from Prometheus, optional Loki, optional Grafana, and optional Kubernetes metadata. |
+| `/dashboard <service>` | Generate Grafana dashboard JSON from discovered service context and baselines. |
+| `/investigate <symptom>` | Correlate live metrics, logs, topology, and incident history for an operational symptom. |
+| `/slo <service>` | Define or inspect SLOs and generate recording or alerting rule examples. |
+| `/tune-alerts <service>` | Recommend alert thresholds from historical metric distributions and baselines. |
 
-*Filter by service, severity, HTTP status code, and method. Log rate, HTTP status distribution, response time from logs, and error logs with parsed JSON fields.*
+## `.sre/` Context
 
-### Per-service Dashboard — USE method with baseline-derived thresholds
-![Frontend Dashboard](docs/screenshots/dashboard-v2-top.png)
+Generated context is expected to live beside the user's application code:
 
-### Incident surface — cartservice CrashLoopBackOff
-![Cartservice incident](docs/screenshots/cartservice.png)
-
-*0% status · 0 pods · 9 restarts · 31.9% CPU throttling · sawtooth memory pattern — all from a single `/dashboard cartservice`*
-
----
-
-## Skills
-
-| Skill | Command | Description |
-|-------|---------|-------------|
-| **discover** | `/discover` | Crawl Prometheus/Loki/K8s → populate `.sre/` context |
-| **dashboard** | `/dashboard <service>` | Generate Grafana dashboard from real metrics + baselines |
-| **investigate** | `/investigate <symptom>` | Incident investigation with live data correlation |
-| **define-slo** | `/slo <service>` | SLO definition + error budget tracking |
-| **tune-alerts** | `/tune-alerts <service>` | Data-driven alert threshold tuning |
-
-## The `.sre/` context directory
-
-Think of it like `.git/` — generated per environment, never committed, read by every skill.
-
-```
+```text
 .sre/
-├── config.yaml          # connection URLs (no credentials — use env vars)
-├── topology.yaml        # service dependency graph
-├── services/            # per-service metrics, labels, Loki config
-├── baselines/           # cpu avg/max, memory avg/max, restart rate
-├── incidents/           # incident memory (written by /investigate)
-└── dashboards.yaml      # dashboard registry
+├── config.yaml
+├── topology.yaml
+├── services/
+├── baselines/
+├── incidents/
+└── dashboards.yaml
 ```
 
-Run `/discover` once after cloning or after infrastructure changes. Everything else reads from `.sre/`.
+Credentials should stay in environment variables such as `GRAFANA_PASSWORD` or `GRAFANA_TOKEN`. Do not write tokens, passwords, kubeconfigs, or API keys into `.sre/config.yaml`.
 
-## Install
+## Install Locally
 
-**Step 1 — Clone the repo:**
 ```bash
 git clone https://github.com/charles-adedotun/sre-plugin ~/sre-plugin
-```
-
-**Step 2 — Copy into the Claude Code local plugin cache:**
-```bash
 mkdir -p ~/.claude/plugins/cache/local/sre-skills/1.0.0
 cp -r ~/sre-plugin/. ~/.claude/plugins/cache/local/sre-skills/1.0.0/
 ```
 
-**Step 3 — Register in `~/.claude/plugins/installed_plugins.json`:**
+Then register the local plugin in `~/.claude/plugins/installed_plugins.json`:
 
-Open the file and add an entry to the `"plugins"` object:
 ```json
 "sre-skills@local": [
   {
@@ -91,48 +68,40 @@ Open the file and add an entry to the `"plugins"` object:
 ]
 ```
 
-Replace `YOUR_USERNAME` with your macOS username (`whoami`).
+Restart Claude Code after registration.
 
-**Step 4 — Restart Claude Code.** The `/discover`, `/dashboard`, `/investigate`, `/slo`, and `/tune-alerts` commands will be available.
-
-## Quick start
+## Quick Start
 
 ```bash
 export PROMETHEUS_URL=http://localhost:9090
-export LOKI_URL=http://localhost:3100       # optional
-export GRAFANA_URL=http://localhost:3000    # optional
-export GRAFANA_PASSWORD=your-password       # optional
-export GRAFANA_LOKI_UID=your-loki-uid       # find in Grafana → Connections → Data sources
-
-# In Claude Code:
-/discover                        # index your infrastructure → populates .sre/
-/dashboard frontend              # generate + push a Grafana dashboard
-/investigate "high error rate"   # diagnose with live data
-/slo payment-service             # define SLOs and error budgets
-/tune-alerts cartservice         # data-driven threshold recommendations
+export LOKI_URL=http://localhost:3100
+export GRAFANA_URL=http://localhost:3000
+export GRAFANA_PASSWORD=your-password
+export GRAFANA_LOKI_UID=your-loki-uid
 ```
 
-## Requirements
+In Claude Code:
 
-- **Prometheus** (required)
-- **Loki** (optional — enables log panels and log-based investigation)
-- **Grafana** (optional — enables dashboard push and registry)
-- **kubectl** (optional — enables topology discovery via env var inspection)
+```text
+/discover
+/dashboard frontend
+/investigate "high error rate"
+/slo payment-service
+/tune-alerts cartservice
+```
 
-## Examples
+## Verification
 
-`examples/sre/` — sample `.sre/` context files from an Online Boutique demo cluster. Shows the schema the skills produce and consume, including a `cartservice` baseline with `null` memory (captured during a CrashLoopBackOff incident).
-
-`examples/dashboards/` — Python scripts that generated the dashboards shown in the screenshots above. Hardwired to Online Boutique — useful as a reference or starting point. Configure via env vars:
+Run the local validation script:
 
 ```bash
-export GRAFANA_LOKI_UID=<your-loki-uid>    # find in Grafana → Connections → Data sources → Loki
-export SRE_NAMESPACE=online-boutique
-python3 examples/dashboards/online-boutique-dashboards.py
+python3 scripts/validate_plugin.py
 ```
 
-## Notes
+The CI workflow runs the same script. It validates plugin metadata, command and skill frontmatter, example config safety, and Python syntax for the dashboard generator scripts.
 
-- `/investigate` uses `model: claude-opus` for multi-step live data correlation. Requires Opus access.
-- The `GRAFANA_LOKI_UID` is instance-specific. Without it, log panels show "No data". Find it at Grafana → Connections → Data sources → Loki → the UID is in the page URL.
-- `/discover` must run before other skills. Re-run after infrastructure changes.
+## Known Limits
+
+- Live Prometheus, Loki, Grafana, and Kubernetes behavior depends on the user's environment.
+- The dashboard generator scripts in `examples/dashboards/` default to Online Boutique names and are examples, not a general dashboard engine.
+- `/investigate` and the `sre` agent request Opus for multi-step operational reasoning; access depends on the user's Claude Code configuration.
